@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NFT Marketplace — Mint | Auction | Trade</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+    <style>
+        /* ===== RESET & BASE ===== */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a28;
+            --bg-glass: rgba(255, 255, 255, 0.04);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --text-primary: #f0f0f5;
+            --text-secondary: #9898b0;
+            --text-muted: #6b6b85;
+            --accent-1: #8b5cf6;
+            --accent-2: #06b6d4;
+            --accent-3: #f59e0b;
+            --accent-gradient: linear-gradient(135deg, #8b5cf6, #06b6d4);
+            --accent-gradient-warm: linear-gradient(135deg, #8b5cf6, #f59e0b);
+            --radius-sm: 8px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --radius-xl: 32px;
+            --shadow-glow: 0 0 30px rgba(139, 92, 246, 0.25);
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        a {
+            color: var(--accent-1);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        a:hover {
+            color: var(--accent-2);
+        }
+        img {
+            max-width: 100%;
+            display: block;
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-1);
+            border-radius: 3px;
+        }
+
+        /* ===== ANIMATED BG ===== */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ===== CONTAINER ===== */
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+            position: relative;
+            z-index: 1;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 16px;
+            }
+        }
+
+        /* ===== NAVBAR ===== */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 16px 0;
+            background: rgba(10, 10, 15, 0.72);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid var(--border-glass);
+            transition: all 0.3s;
+        }
+        .navbar .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            font-size: 1.25rem;
+            color: #fff;
+            letter-spacing: -0.02em;
+        }
+        .navbar-brand .brand-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--accent-gradient);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            list-style: none;
+        }
+        .nav-links a {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+        .nav-cta {
+            background: var(--accent-gradient);
+            padding: 10px 24px;
+            border-radius: 100px;
+            font-weight: 600;
+            color: #fff !important;
+            font-size: 0.85rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+        .nav-cta:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-glow);
+        }
+        .nav-toggle {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+        }
+        .nav-toggle span {
+            width: 24px;
+            height: 2px;
+            background: var(--text-primary);
+            border-radius: 2px;
+            transition: 0.3s;
+        }
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: rgba(10, 10, 15, 0.95);
+                backdrop-filter: blur(20px);
+                flex-direction: column;
+                padding: 24px;
+                gap: 20px;
+                border-bottom: 1px solid var(--border-glass);
+            }
+            .nav-links.open {
+                display: flex;
+            }
+            .nav-toggle {
+                display: flex;
+            }
+        }
+
+        /* ===== HERO ===== */
+        .hero {
+            padding: 140px 0 80px;
+            position: relative;
+            text-align: center;
+        }
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 100px;
+            padding: 8px 20px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 28px;
+            backdrop-filter: blur(10px);
+        }
+        .hero-badge .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse-dot 1.8s ease-in-out infinite;
+        }
+        @keyframes pulse-dot {
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(0.8);
+            }
+        }
+        .hero h1 {
+            font-size: clamp(2.8rem, 8vw, 5.5rem);
+            font-weight: 900;
+            line-height: 1.05;
+            letter-spacing: -0.04em;
+            background: linear-gradient(135deg, #ffffff 30%, var(--accent-1) 70%, var(--accent-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 24px;
+        }
+        .hero p {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            max-width: 680px;
+            margin: 0 auto 36px;
+            line-height: 1.7;
+        }
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 60px;
+        }
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 36px;
+            border-radius: 100px;
+            font-weight: 600;
+            font-size: 1rem;
+            background: var(--accent-gradient);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow);
+        }
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 36px;
+            border-radius: 100px;
+            font-weight: 600;
+            font-size: 1rem;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+
+        /* ===== HERO STATS ===== */
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 48px;
+            flex-wrap: wrap;
+        }
+        .hero-stat {
+            text-align: center;
+        }
+        .hero-stat .num {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: var(--accent-gradient-warm);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero-stat .label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* ===== SECTION HEADERS ===== */
+        .section-header {
+            text-align: center;
+            margin-bottom: 56px;
+        }
+        .section-header .tag {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--accent-1);
+            margin-bottom: 12px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            padding: 4px 16px;
+            border-radius: 100px;
+            background: rgba(139, 92, 246, 0.06);
+        }
+        .section-header h2 {
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 16px;
+        }
+        .section-header p {
+            color: var(--text-secondary);
+            max-width: 560px;
+            margin: 0 auto;
+            font-size: 1.05rem;
+        }
+
+        /* ===== FEATURES ===== */
+        .features {
+            padding: 100px 0;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-md);
+            padding: 32px 28px;
+            transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+        }
+        .feature-card:hover {
+            border-color: rgba(139, 92, 246, 0.3);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-sm);
+            background: rgba(139, 92, 246, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .feature-card h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .feature-card p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        /* ===== MOCK UI DASHBOARD ===== */
+        .mock-dashboard {
+            padding: 80px 0 120px;
+        }
+        .dashboard-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.5);
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .dashboard-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--border-glass);
+        }
+        .dashboard-header .left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .dashboard-header .dots {
+            display: flex;
+            gap: 6px;
+        }
+        .dashboard-header .dots span {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        .dot-red {
+            background: #ef4444;
+        }
+        .dot-yellow {
+            background: #f59e0b;
+        }
+        .dot-green {
+            background: #22c55e;
+        }
+        .dashboard-header .title {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+        .dashboard-header .wallet-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 100px;
+            padding: 6px 16px 6px 10px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        .wallet-badge .avatar {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--accent-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #fff;
+            font-weight: 700;
+        }
+        .dashboard-body {
+            padding: 24px;
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 24px;
+        }
+        @media (max-width: 900px) {
+            .dashboard-body {
+                grid-template-columns: 1fr;
+            }
+        }
+        .dashboard-main .tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-glass);
+            border-radius: var(--radius-sm);
+            padding: 4px;
+            margin-bottom: 24px;
+            width: fit-content;
+        }
+        .dashboard-main .tabs button {
+            padding: 8px 20px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: var(--font-sans);
+        }
+        .dashboard-main .tabs button.active {
+            background: var(--accent-1);
+            color: #fff;
+        }
+        .nft-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+        }
+        .nft-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-glass);
+            overflow: hidden;
+            transition: transform 0.2s, border-color 0.2s;
+            cursor: pointer;
+        }
+        .nft-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+        .nft-card .nft-img {
+            width: 100%;
+            aspect-ratio: 1/1;
+            object-fit: cover;
+            display: block;
+            background: var(--bg-primary);
+        }
+        .nft-card .nft-info {
+            padding: 14px;
+        }
+        .nft-card .nft-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+        .nft-card .nft-sub {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        .nft-card .nft-price {
+            font-weight: 700;
+            color: var(--accent-2);
+        }
+        .dashboard-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .sidebar-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-glass);
+            padding: 20px;
+        }
+        .sidebar-card h4 {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+        .sidebar-card .balance {
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+        .sidebar-card .balance-sub {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        .sidebar-card .progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 3px;
+            margin: 12px 0;
+            overflow: hidden;
+        }
+        .sidebar-card .progress-bar .fill {
+            height: 100%;
+            width: 65%;
+            background: var(--accent-gradient);
+            border-radius: 3px;
+        }
+        .sidebar-card .action-btn {
+            width: 100%;
+            padding: 10px;
+            border-radius: var(--radius-sm);
+            border: none;
+            background: var(--accent-gradient);
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            font-family: var(--font-sans);
+        }
+        .sidebar-card .action-btn:hover {
+            opacity: 0.9;
+        }
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+        .activity-item .act-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(139, 92, 246, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .activity-item .act-text {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        .activity-item .act-text strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        .activity-item .act-time {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+
+        /* ===== TECH STACK ===== */
+        .tech-stack {
+            padding: 100px 0;
+            background: var(--bg-secondary);
+        }
+        .tech-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 16px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .tech-chip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 100px;
+            padding: 12px 24px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .tech-chip:hover {
+            border-color: rgba(139, 92, 246, 0.3);
+            background: rgba(139, 92, 246, 0.06);
+        }
+        .tech-chip .chip-icon {
+            font-size: 20px;
+        }
+
+        /* ===== SMART CONTRACTS ===== */
+        .smart-contracts {
+            padding: 100px 0;
+        }
+        .contracts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+        .contract-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-md);
+            padding: 28px;
+            transition: border-color 0.3s, transform 0.3s;
+        }
+        .contract-card:hover {
+            border-color: rgba(6, 182, 212, 0.3);
+            transform: translateY(-3px);
+        }
+        .contract-card .contract-name {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: var(--accent-2);
+            margin-bottom: 8px;
+        }
+        .contract-card h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .contract-card p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        /* ===== CTA ===== */
+        .cta-section {
+            padding: 80px 0 100px;
+            text-align: center;
+        }
+        .cta-box {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(6, 182, 212, 0.08));
+            border: 1px solid rgba(139, 92, 246, 0.15);
+            border-radius: var(--radius-lg);
+            padding: 60px 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .cta-box h2 {
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+        .cta-box p {
+            color: var(--text-secondary);
+            max-width: 480px;
+            margin: 0 auto 32px;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            padding: 40px 0;
+            border-top: 1px solid var(--border-glass);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 16px;
+            list-style: none;
+        }
+        .footer-links a {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+        .footer-links a:hover {
+            color: var(--text-primary);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 480px) {
+            .hero-stats {
+                gap: 24px;
+            }
+            .hero-stat .num {
+                font-size: 1.4rem;
+            }
+            .dashboard-body {
+                padding: 16px;
+            }
+            .nft-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .cta-box {
+                padding: 40px 20px;
+            }
+        }
+
+        /* ===== ANIMATIONS ===== */
+        .fade-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .fade-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .fade-up-stagger > * {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .fade-up-stagger.visible > * {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .fade-up-stagger.visible > *:nth-child(1) {
+            transition-delay: 0s;
+        }
+        .fade-up-stagger.visible > *:nth-child(2) {
+            transition-delay: 0.08s;
+        }
+        .fade-up-stagger.visible > *:nth-child(3) {
+            transition-delay: 0.16s;
+        }
+        .fade-up-stagger.visible > *:nth-child(4) {
+            transition-delay: 0.24s;
+        }
+        .fade-up-stagger.visible > *:nth-child(5) {
+            transition-delay: 0.32s;
+        }
+        .fade-up-stagger.visible > *:nth-child(6) {
+            transition-delay: 0.40s;
+        }
+        .fade-up-stagger.visible > *:nth-child(7) {
+            transition-delay: 0.48s;
+        }
+        .fade-up-stagger.visible > *:nth-child(8) {
+            transition-delay: 0.56s;
+        }
+        .fade-up-stagger.visible > *:nth-child(9) {
+            transition-delay: 0.64s;
+        }
+        .fade-up-stagger.visible > *:nth-child(10) {
+            transition-delay: 0.72s;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== ANIMATED BACKGROUND CANVAS ===== -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- ===== NAVBAR ===== -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-brand">
+                <div class="brand-icon">◆</div>
+                NFT Marketplace
+            </div>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <span></span><span></span><span></span>
+            </button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#dashboard">App</a></li>
+                <li><a href="#tech">Tech</a></li>
+                <li><a href="#contracts">Contracts</a></li>
+                <li><a class="nav-cta" href="#cta">Launch App</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- ===== HERO ===== -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-badge">
+                <span class="dot"></span>
+                Ethereum Mainnet &bull; Open Source
+            </div>
+            <h1>Mint, Auction &amp;<br />Trade NFTs</h1>
+            <p>
+                A full-stack, open-source NFT marketplace on Ethereum.
+                Create collections, mint with IPFS metadata, run auctions,
+                and trade — all powered by Next.js, Foundry &amp; Wagmi.
+            </p>
+            <div class="hero-actions">
+                <a class="btn-primary" href="https://github.com/ad-dan/nftmarketplace" target="_blank">
+                    ⚡ View GitHub
+                </a>
+                <a class="btn-secondary" href="https://github.com/ad-dan/nftmarketplace" target="_blank">
+                    📜 View Contracts
+                </a>
+            </div>
+           
+        </div>
+    </section>
+
+    <!-- ===== FEATURES ===== -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header fade-up">
+                <div class="tag">Features</div>
+                <h2>Everything You Need</h2>
+                <p>From minting to auctions — a complete Web3 toolkit built on Ethereum.</p>
+            </div>
+            <div class="features-grid fade-up-stagger" id="featuresGrid">
+                <div class="feature-card">
+                    <div class="feature-icon">🏗️</div>
+                    <h3>Create NFT Collections</h3>
+                    <p>Deploy your own ERC-721 collections with a single transaction via the registry contract.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎨</div>
+                    <h3>Mint NFTs</h3>
+                    <p>Mint with metadata stored on IPFS via Pinata. Fully decentralized asset storage.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Auction NFTs</h3>
+                    <p>List NFTs for auction, set starting bids and durations, accept bids from anyone.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👀</div>
+                    <h3>Browse &amp; Bid</h3>
+                    <p>View all active auctions, inspect NFT details, and place bids in real time.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👜</div>
+                    <h3>Owned NFTs</h3>
+                    <p>See every NFT you own, including those won at auction — all in one place.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3>Block Explorer</h3>
+                    <p>Inspect local blockchain transactions and blocks directly from the dashboard.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== MOCK DASHBOARD ===== -->
+    <section class="mock-dashboard" id="dashboard">
+        <div class="container">
+            <div class="section-header fade-up">
+                <div class="tag">Live Demo</div>
+                <h2>Mock Dashboard</h2>
+                <p>Explore the interface. Mint, auction, and manage NFTs — all in one place.</p>
+            </div>
+            <div class="dashboard-container fade-up">
+                <!-- Window header -->
+                <div class="dashboard-header">
+                    <div class="left">
+                        <div class="dots">
+                            <span class="dot-red"></span>
+                            <span class="dot-yellow"></span>
+                            <span class="dot-green"></span>
+                        </div>
+                        <span class="title">NFT Marketplace — Dashboard</span>
+                    </div>
+                    <div class="wallet-badge">
+                        <div class="avatar">⚡</div>
+                        0x7F...3aB2
+                    </div>
+                </div>
+                <!-- Body -->
+                <div class="dashboard-body">
+                    <div class="dashboard-main">
+                        <div class="tabs">
+                            <button class="active">All NFTs</button>
+                            <button>Auctions</button>
+                            <button>My Collection</button>
+                        </div>
+                        <div class="nft-grid" id="nftGrid">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                    <div class="dashboard-sidebar">
+                        <div class="sidebar-card">
+                            <h4>Portfolio</h4>
+                            <div class="balance">12.45 ETH</div>
+                            <div class="balance-sub">≈ $24,890 USD</div>
+                            <div class="progress-bar">
+                                <div class="fill"></div>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--text-muted);margin-bottom:12px;">
+                                <span>Staked: 4.2 ETH</span>
+                                <span>Available: 8.25 ETH</span>
+                            </div>
+                            <button class="action-btn">+ Add Funds</button>
+                        </div>
+                        <div class="sidebar-card">
+                            <h4>Recent Activity</h4>
+                            <div class="activity-item">
+                                <div class="act-icon">⬆️</div>
+                                <div class="act-text"><strong>You</strong> placed a bid on <strong>CyberPunk #42</strong></div>
+                                <div class="act-time">2m ago</div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="act-icon">🏆</div>
+                                <div class="act-text">Auction won for <strong>Genesis #007</strong></div>
+                                <div class="act-time">14m ago</div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="act-icon">🖼️</div>
+                                <div class="act-text">Minted <strong>Neon Ape #19</strong></div>
+                                <div class="act-time">1h ago</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== TECH STACK ===== -->
+    <section class="tech-stack" id="tech">
+        <div class="container">
+            <div class="section-header fade-up">
+                <div class="tag">Tech Stack</div>
+                <h2>Built With Modern Web3</h2>
+                <p>Cutting-edge tools for a seamless decentralized experience.</p>
+            </div>
+            <div class="tech-grid fade-up-stagger" id="techGrid">
+                <div class="tech-chip"><span class="chip-icon">▲</span> Next.js</div>
+                <div class="tech-chip"><span class="chip-icon">⛓️</span> Foundry</div>
+                <div class="tech-chip"><span class="chip-icon">TS</span> TypeScript</div>
+                <div class="tech-chip"><span class="chip-icon">V</span> Viem</div>
+                <div class="tech-chip"><span class="chip-icon">W</span> Wagmi</div>
+                <div class="tech-chip"><span class="chip-icon">🌈</span> RainbowKit</div>
+                <div class="tech-chip"><span class="chip-icon">📦</span> Pinata / IPFS</div>
+                <div class="tech-chip"><span class="chip-icon">◆</span> ERC-721</div>
+                <div class="tech-chip"><span class="chip-icon">⚡</span> Solidity</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SMART CONTRACTS ===== -->
+    <section class="smart-contracts" id="contracts">
+        <div class="container">
+            <div class="section-header fade-up">
+                <div class="tag">Solidity</div>
+                <h2>Smart Contracts</h2>
+                <p>Open-source, audited contracts that power the marketplace.</p>
+            </div>
+            <div class="contracts-grid fade-up-stagger" id="contractsGrid">
+                <div class="contract-card">
+                    <div class="contract-name">NFTCollection.sol</div>
+                    <h3>ERC-721 Collection</h3>
+                    <p>Mint NFTs with metadata stored on IPFS. Supports minting, token URI resolution, and collection-level management.</p>
+                </div>
+                <div class="contract-card">
+                    <div class="contract-name">NFTAuction.sol</div>
+                    <h3>Auction Engine</h3>
+                    <p>Create timed auctions, place bids, settle sales, and distribute fees. Supports starting price, reserve, and fee splitting.</p>
+                </div>
+                <div class="contract-card">
+                    <div class="contract-name">ContractRegistry.sol</div>
+                    <h3>Registry &amp; Discovery</h3>
+                    <p>Registers all NFT collections on-chain. Enables discovery of every collection deployed through the marketplace.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== CTA ===== -->
+    <section class="cta-section" id="cta">
+        <div class="container">
+            <div class="cta-box fade-up">
+                <h2>Ready to Build?</h2>
+                <p>Clone the repo, deploy the contracts, and start minting. Full open-source codebase with Foundry &amp; Next.js.</p>
+                <div class="hero-actions" style="justify-content:center;">
+                    <a class="btn-primary" href="https://github.com" target="_blank">
+                        🐙 View on GitHub
+                    </a>
+                    <a class="btn-secondary" href="#" onclick="alert('Launching demo… 🚀')">
+                        ▶️ Launch Demo
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="footer">
+        <div class="container">
+            <ul class="footer-links">
+                <li><a href="#">GitHub</a></li>
+                <li><a href="#">Documentation</a></li>
+                <li><a href="#">Etherscan</a></li>
+                <li><a href="#">Twitter</a></li>
+            </ul>
+            <p>&copy; 2026 NFT Marketplace &mdash; Built with ❤️ on Ethereum</p>
+        </div>
+    </footer>
+
+    <script>
+        // ===== ANIMATED BACKGROUND (Canvas) =====
+        (function() {
+            const canvas = document.getElementById('bg-canvas');
+            const ctx = canvas.getContext('2d');
+            let w, h;
+            const particles = [];
+            const PARTICLE_COUNT = 80;
+
+            function resize() {
+                w = canvas.width = window.innerWidth;
+                h = canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            class Particle {
+                constructor() {
+                    this.reset();
+                }
+                reset() {
+                    this.x = Math.random() * w;
+                    this.y = Math.random() * h;
+                    this.size = Math.random() * 2 + 0.5;
+                    this.speedX = (Math.random() - 0.5) * 0.3;
+                    this.speedY = (Math.random() - 0.5) * 0.3;
+                    this.opacity = Math.random() * 0.5 + 0.1;
+                }
+                update() {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    if (this.x < 0 || this.x > w) this.speedX *= -1;
+                    if (this.y < 0 || this.y > h) this.speedY *= -1;
+                }
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(139, 92, 246, ${this.opacity})`;
+                    ctx.fill();
+                }
+            }
+
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                particles.push(new Particle());
+            }
+
+            function drawLines() {
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 150) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = `rgba(139, 92, 246, ${0.06 * (1 - dist / 150)})`;
+                            ctx.lineWidth = 0.6;
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, w, h);
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+                drawLines();
+                requestAnimationFrame(animate);
+            }
+            animate();
+        })();
+
+        // ===== NAV TOGGLE =====
+        document.getElementById('navToggle').addEventListener('click', function() {
+            document.getElementById('navLinks').classList.toggle('open');
+        });
+
+        // ===== NFT GRID (Mock Data) =====
+        const nftData = [
+            { name: 'CyberPunk #42', price: '0.85 ETH', img: 'https://picsum.photos/seed/cyber42/400/400' },
+            { name: 'Neon Ape #19', price: '1.20 ETH', img: 'https://picsum.photos/seed/neon19/400/400' },
+            { name: 'Genesis #007', price: '3.50 ETH', img: 'https://picsum.photos/seed/genesis7/400/400' },
+            { name: 'Pixel Realm #88', price: '0.42 ETH', img: 'https://picsum.photos/seed/pixel88/400/400' },
+            { name: 'Ethereal #13', price: '2.10 ETH', img: 'https://picsum.photos/seed/ethereal13/400/400' },
+            { name: 'Cosmic Ape #55', price: '0.66 ETH', img: 'https://picsum.photos/seed/cosmic55/400/400' },
+        ];
+
+        const grid = document.getElementById('nftGrid');
+        nftData.forEach(nft => {
+            const card = document.createElement('div');
+            card.className = 'nft-card';
+            card.innerHTML = `
+                <img class="nft-img" src="${nft.img}" alt="${nft.name}" loading="lazy" onerror="this.src='https://picsum.photos/seed/fallback/400/400'" />
+                <div class="nft-info">
+                    <div class="nft-name">${nft.name}</div>
+                    <div class="nft-sub">
+                        <span>Current Bid</span>
+                        <span class="nft-price">${nft.price}</span>
+                    </div>
+                </div>
+            `;
+            card.addEventListener('click', () => {
+                alert(`⚡ ${nft.name} — Bid ${nft.price}`);
+            });
+            grid.appendChild(card);
+        });
+
+        // ===== TAB SWITCHING (Mock) =====
+        document.querySelectorAll('.dashboard-main .tabs button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.dashboard-main .tabs button').forEach(b => b.classList.remove(
+                'active'));
+                this.classList.add('active');
+            });
+        });
+
+        // ===== SCROLL REVEAL (Intersection Observer) =====
+        const observerOptions = {
+            threshold: 0.12,
+            rootMargin: '0px 0px -40px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    // If the target has children with stagger, observe them too
+                    if (entry.target.classList.contains('fade-up-stagger')) {
+                        // already handled by CSS
+                    }
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-up, .fade-up-stagger').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Also observe individual items inside stagger (so they get the delay)
+        document.querySelectorAll('.fade-up-stagger > *').forEach(el => {
+            // We let the parent trigger the visibility
+        });
+
+        // Trigger visible for elements already in view
+        setTimeout(() => {
+            document.querySelectorAll('.fade-up, .fade-up-stagger').forEach(el => {
+                const rect = el.getBoundingClientRect();
+                if (rect.top < window.innerHeight - 60) {
+                    el.classList.add('visible');
+                }
+            });
+        }, 200);
+    </script>
+
+</body>
+</html>
